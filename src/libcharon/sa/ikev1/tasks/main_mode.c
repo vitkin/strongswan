@@ -703,14 +703,20 @@ METHOD(task_t, process_i, status_t,
 			}
 			id = id_payload->get_identification(id_payload);
 			cid = this->ph1->get_id(this->ph1, this->peer_cfg, FALSE);
+
+			// TODO: Replace workaround for remote certificate SAN IP Address mismatch.
 			if (cid && !id->matches(id, cid))
 			{
 				DBG1(DBG_IKE, "IDir '%Y' does not match to '%Y'", id, cid);
-				id->destroy(id);
-				charon->bus->alert(charon->bus, ALERT_PEER_AUTH_FAILED);
-				return send_delete(this);
+				// id->destroy(id);
+				// charon->bus->alert(charon->bus, ALERT_PEER_AUTH_FAILED);
+				// return send_delete(this);
+				this->ike_sa->set_other_id(this->ike_sa, cid);
 			}
-			this->ike_sa->set_other_id(this->ike_sa, id);
+			else
+			{
+				this->ike_sa->set_other_id(this->ike_sa, id);
+			}
 
 			if (!this->ph1->verify_auth(this->ph1, this->method, message,
 										id_payload->get_encoded(id_payload)))
